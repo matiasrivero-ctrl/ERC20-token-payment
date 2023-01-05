@@ -1,13 +1,13 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 abstract contract TokenPaymentSplitter {
+    using SafeERC20 for IERC20;
+
     event PayeeAdded(address account, uint256 shares);
     event PaymentReleased(address to, uint256 amount);
-
-    using SafeERC20 for IERC20;
 
     address internal paymentToken; // Token that we'll use for payments
     uint256 internal _totalShares; // Provides the addition of shares for all payess
@@ -31,6 +31,8 @@ abstract contract TokenPaymentSplitter {
         for (uint256 i = 0; i < payees.length; i++) {
             _addPayee(payees[i], shares_[i]);
         } // assigns each payee and their shares to the variables we created above.
+
+        paymentToken = _paymentToken;
     }
 
     // Call & get the contract variables
@@ -59,6 +61,7 @@ abstract contract TokenPaymentSplitter {
 
         _payees.push(account);
         _shares[account] = shares_;
+        _totalShares = _totalShares + shares_;
 
         emit PayeeAdded(account, shares_);
     }
@@ -83,8 +86,8 @@ abstract contract TokenPaymentSplitter {
         );
         _tokenReleased[account] = _tokenReleased[account] + payment;
         _totalTokenReleased = _totalTokenReleased + payment;
-        IERC20(paymentToken).safeTransfer(account, payment);
 
+        IERC20(paymentToken).safeTransfer(account, payment);
         emit PaymentReleased(account, payment);
     }
 }
